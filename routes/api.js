@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { listUsers } from "../controllers/users.controller.js";
 import { listCategories } from "../controllers/categories.controller.js";
+import { listIngredients } from "../controllers/ingredients.controller.js";
 import { listRecipes } from "../controllers/recipes.controller.js";
 import { listTestimonials } from "../controllers/testimonials.controller.js";
 import { listAll } from "../controllers/all.controller.js";
@@ -31,6 +32,18 @@ router.get("/users", listUsers);
  *         description: OK
  */
 router.get("/categories", listCategories);
+
+/**
+ * @swagger
+ * /ingredients:
+ *   get:
+ *     tags: [Ingredients]
+ *     summary: List ingredients
+ *     responses:
+ *       200:
+ *         description: OK
+ */
+router.get("/ingredients", listIngredients);
 
 /**
  * @swagger
