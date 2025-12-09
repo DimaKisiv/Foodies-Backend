@@ -2,7 +2,6 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
-import { sequelize } from "./sequelize.js";
 import {
   User,
   Area,
@@ -11,22 +10,6 @@ import {
   Recipe,
   Testimonial,
 } from "../models/index.js";
-
-// Load env from project root; fallback to db/.env if needed
-(() => {
-  const rootEnvPath = path.join(process.cwd(), ".env");
-  // use a local path based on this file location
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirnameLocal = path.dirname(__filename);
-  const dbEnvPath = path.join(__dirnameLocal, ".env");
-  if (fs.existsSync(rootEnvPath)) {
-    dotenv.config({ path: rootEnvPath });
-  } else if (fs.existsSync(dbEnvPath)) {
-    dotenv.config({ path: dbEnvPath });
-  } else {
-    dotenv.config();
-  }
-})();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

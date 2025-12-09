@@ -28,7 +28,6 @@ const options = {
       { name: "All" },
     ],
   },
-  // Scan route/controller files for JSDoc @swagger blocks
   apis: ["./routes/*.js", "./controllers/*.js"],
 };
 
