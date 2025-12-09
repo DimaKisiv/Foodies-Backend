@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: foodies-backend
+    env: node
+    plan: free
+    region: frankfurt
+    buildCommand: "npm install"
+    startCommand: "node app.js"
+    autoDeploy: true
+    healthCheckPath: "/"
+    envVars:
+      - key: NODE_VERSION
+        value: 18
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        sync: false
+      - key: SYNC
+        value: "false"
+      - key: SEED
+        value: "false"
