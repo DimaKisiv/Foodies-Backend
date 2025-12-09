@@ -8,7 +8,7 @@ import { runSeed } from "./db/seed.js";
 import apiRouter from "./routes/api.js";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./utils/swagger.js";
-// Serve Swagger UI with swagger-jsdoc generated spec
+
 const app = express();
 app.use(cors());
 app.use(express.json());
