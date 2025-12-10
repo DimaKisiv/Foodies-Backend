@@ -4,6 +4,7 @@ import { listCategories } from "../controllers/categories.controller.js";
 import { listRecipes } from "../controllers/recipes.controller.js";
 import { listTestimonials } from "../controllers/testimonials.controller.js";
 import { listAll } from "../controllers/all.controller.js";
+import { listAreas } from "../controllers/areas.controller.js";
 import authRouter from "./auth.js";
 
 const router = Router();
@@ -68,5 +69,17 @@ router.get("/testimonials", listTestimonials);
  */
 router.get("/all", listAll);
 router.use("/auth", authRouter);
+
+/**
+ * @swagger
+ * /areas:
+ *   get:
+ *     tags: [Areas]
+ *     summary: List areas
+ *     responses:
+ *       200:
+ *         description: OK
+ */
+router.get("/areas", listAreas);
 
 export default router;
