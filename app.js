@@ -10,7 +10,12 @@ import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./utils/swagger.js";
 
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 app.use(express.static(path.join(process.cwd(), "public")));
