@@ -22,6 +22,7 @@ const options = {
     tags: [
       { name: "Users" },
       { name: "Categories" },
+      { name: "Ingredients" },
       { name: "Recipes" },
       { name: "Testimonials" },
       { name: "Auth" },

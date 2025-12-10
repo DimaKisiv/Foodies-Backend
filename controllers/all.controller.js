@@ -2,6 +2,7 @@ import * as UsersService from "../services/users.service.js";
 import * as CategoriesService from "../services/categories.service.js";
 import * as RecipesService from "../services/recipes.service.js";
 import * as TestimonialsService from "../services/testimonials.service.js";
+import * as IngredientsService from "../services/ingredients.service.js";
 
 export async function listAll(req, res, next) {
   try {
