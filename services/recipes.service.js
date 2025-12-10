@@ -1,6 +1,13 @@
 import { Op, fn } from "sequelize";
 import { Recipe, Ingredient, User, Favorite } from "../models/index.js";
 
+const RECIPE_OWNER_ATTRIBUTES = ["id", "name", "avatar"];
+const DEFAULT_RECIPE_OWNER_INCLUDE = {
+  model: User,
+  as: "owner",
+  attributes: RECIPE_OWNER_ATTRIBUTES,
+};
+
 async function expandIngredients(recipeInstance) {
   if (!recipeInstance) return null;
   const recipe = recipeInstance.toJSON();
@@ -29,7 +36,7 @@ export async function getRecipeById(
   id,
   { includeOwner = true, expand = true } = {}
 ) {
-  const include = includeOwner ? [{ model: User, as: "owner" }] : [];
+  const include = includeOwner ? [DEFAULT_RECIPE_OWNER_INCLUDE] : [];
   const rec = await Recipe.findByPk(id, { include });
   if (expand) return await expandIngredients(rec);
   return rec;
@@ -38,6 +45,7 @@ export async function getRecipeById(
 export async function listRecipes({
   page = 1,
   limit = 20,
+  includeRecipeOwners = true,
   ownerId,
   category,
   area,
@@ -60,10 +68,12 @@ export async function listRecipes({
     }
   }
   const offset = (page - 1) * limit;
+  const include = includeRecipeOwners ? [DEFAULT_RECIPE_OWNER_INCLUDE] : []; 
   const { rows, count } = await Recipe.findAndCountAll({
     where,
     limit,
     offset,
+    include,
     order: [["created_at", "DESC"]],
   });
   const expanded = await Promise.all(rows.map((r) => expandIngredients(r)));
@@ -99,10 +109,7 @@ export async function listPopularRecipes({ page = 1, limit = 20 } = {}) {
   }
 
   const favoriteRows = await Favorite.findAll({
-    attributes: [
-      "recipeId",
-      [fn("COUNT", "*"), "favoritesCount"],
-    ],
+    attributes: ["recipeId", [fn("COUNT", "*"), "favoritesCount"]],
     group: ["recipeId"],
     order: [[fn("COUNT", "*"), "DESC"]],
     offset,
@@ -114,7 +121,7 @@ export async function listPopularRecipes({ page = 1, limit = 20 } = {}) {
 
   const recipes = await Recipe.findAll({
     where: { id: recipeIds },
-    include: [{ model: User, as: "owner" }],
+    include: [DEFAULT_RECIPE_OWNER_INCLUDE],
   });
 
   const recipeMap = new Map(recipes.map((r) => [r.id, r]));
