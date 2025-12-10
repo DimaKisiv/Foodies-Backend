@@ -1,5 +1,5 @@
-import { Op } from "sequelize";
-import { Recipe, Ingredient, User } from "../models/index.js";
+import { Op, fn } from "sequelize";
+import { Recipe, Ingredient, User, Favorite } from "../models/index.js";
 
 async function expandIngredients(recipeInstance) {
   if (!recipeInstance) return null;
@@ -79,4 +79,61 @@ export async function updateRecipe(id, changes) {
 
 export async function deleteRecipe(id) {
   return await Recipe.destroy({ where: { id } });
+}
+
+export async function listPopularRecipes({ page = 1, limit = 20 } = {}) {
+  const offset = (page - 1) * limit;
+
+  const total = await Favorite.count({
+    distinct: true,
+    col: "recipeId",
+  });
+
+  if (total === 0) {
+    return {
+      items: [],
+      total: 0,
+      page,
+      limit,
+    };
+  }
+
+  const favoriteRows = await Favorite.findAll({
+    attributes: [
+      "recipeId",
+      [fn("COUNT", "*"), "favoritesCount"],
+    ],
+    group: ["recipeId"],
+    order: [[fn("COUNT", "*"), "DESC"]],
+    offset,
+    limit,
+    raw: true,
+  });
+
+  const recipeIds = favoriteRows.map((row) => row.recipeId);
+
+  const recipes = await Recipe.findAll({
+    where: { id: recipeIds },
+    include: [{ model: User, as: "owner" }],
+  });
+
+  const recipeMap = new Map(recipes.map((r) => [r.id, r]));
+
+  const items = [];
+  for (const row of favoriteRows) {
+    const instance = recipeMap.get(row.recipeId);
+    if (!instance) continue;
+    const base = await expandIngredients(instance);
+    items.push({
+      ...base,
+      favoritesCount: Number(row.favoritesCount) || 0,
+    });
+  }
+
+  return {
+    items,
+    total,
+    page,
+    limit,
+  };
 }
