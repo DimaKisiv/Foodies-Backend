@@ -1,6 +1,12 @@
 import { Op, fn } from "sequelize";
 import { Recipe, Ingredient, User, Favorite } from "../models/index.js";
 
+function generateId() {
+  return (
+    Math.random().toString(16).slice(2) + Date.now().toString(16)
+  ).slice(0, 24);
+}
+
 const RECIPE_OWNER_ATTRIBUTES = ["id", "name", "avatar"];
 const DEFAULT_RECIPE_OWNER_INCLUDE = {
   model: User,
@@ -29,7 +35,11 @@ async function expandIngredients(recipeInstance) {
 }
 
 export async function createRecipe(payload) {
-  return await Recipe.create(payload);
+  const data = { ...payload };
+  if (!data.id) {
+    data.id = generateId();
+  }
+  return await Recipe.create(data);
 }
 
 export async function getRecipeById(
