@@ -1,6 +1,12 @@
 import { Op, fn } from "sequelize";
 import { Recipe, Ingredient, User, Favorite } from "../models/index.js";
 
+function generateId() {
+  return (
+    Math.random().toString(16).slice(2) + Date.now().toString(16)
+  ).slice(0, 24);
+}
+
 const RECIPE_OWNER_ATTRIBUTES = ["id", "name", "avatar"];
 const DEFAULT_RECIPE_OWNER_INCLUDE = {
   model: User,
@@ -29,7 +35,11 @@ async function expandIngredients(recipeInstance) {
 }
 
 export async function createRecipe(payload) {
-  return await Recipe.create(payload);
+  const data = { ...payload };
+  if (!data.id) {
+    data.id = generateId();
+  }
+  return await Recipe.create(data);
 }
 
 export async function getRecipeById(
@@ -94,18 +104,13 @@ export async function deleteRecipe(id) {
 export async function listPopularRecipes({ page = 1, limit = 20 } = {}) {
   const offset = (page - 1) * limit;
 
-  const total = await Favorite.count({
+  const totalResult = await Favorite.count({
     distinct: true,
     col: "recipeId",
   });
 
-  if (total === 0) {
-    return {
-      items: [],
-      total: 0,
-      page,
-      limit,
-    };
+  if (totalResult === 0) {
+    return { items: [], total: 0, page, limit };
   }
 
   const favoriteRows = await Favorite.findAll({
@@ -118,29 +123,35 @@ export async function listPopularRecipes({ page = 1, limit = 20 } = {}) {
   });
 
   const recipeIds = favoriteRows.map((row) => row.recipeId);
+  const favCountMap = new Map(
+    favoriteRows.map((row) => [row.recipeId, Number(row.favoritesCount)])
+  );
 
   const recipes = await Recipe.findAll({
     where: { id: recipeIds },
     include: [DEFAULT_RECIPE_OWNER_INCLUDE],
   });
 
-  const recipeMap = new Map(recipes.map((r) => [r.id, r]));
+  const allIngredientIds = recipes.flatMap((r) =>
+    Array.isArray(r.ingredients) ? r.ingredients.map((i) => i.id) : []
+  );
+  const ingredients = await Ingredient.findAll({
+    where: { id: [...new Set(allIngredientIds)] },
+  });
+  const ingredientMap = new Map(ingredients.map((i) => [i.id, i.toJSON()]));
 
-  const items = [];
-  for (const row of favoriteRows) {
-    const instance = recipeMap.get(row.recipeId);
-    if (!instance) continue;
-    const base = await expandIngredients(instance);
-    items.push({
-      ...base,
-      favoritesCount: Number(row.favoritesCount) || 0,
-    });
-  }
+  const items = recipeIds
+    .map((id) => {
+      const instance = recipes.find((r) => r.id === id);
+      if (!instance) return null;
+      const recipe = instance.toJSON();
+      const ingItems = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
+      recipe.ingredientsDetailed = ingItems
+        .map(({ id, measure }) => ({ ...ingredientMap.get(id), measure }))
+        .filter(Boolean);
+      return { ...recipe, favoritesCount: favCountMap.get(id) || 0 };
+    })
+    .filter(Boolean);
 
-  return {
-    items,
-    total,
-    page,
-    limit,
-  };
+  return { items, total: totalResult, page, limit };
 }

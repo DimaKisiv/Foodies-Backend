@@ -19,12 +19,25 @@ const router = Router();
  *   post:
  *     tags: [Auth]
  *     summary: Register user
+ *     security: []
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *               avatar:
+ *                 type: string
+ *                 format: uri
+ *             required: [name, email, password]
  *     responses:
  *       200:
  *         description: OK
@@ -37,12 +50,20 @@ router.post("/register", validate(registerSchema), register);
  *   post:
  *     tags: [Auth]
  *     summary: Login user
+ *     security: []
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *             required: [email, password]
  *     responses:
  *       200:
  *         description: OK
@@ -55,6 +76,8 @@ router.post("/login", validate(loginSchema), login);
  *   post:
  *     tags: [Auth]
  *     summary: Logout user
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: OK

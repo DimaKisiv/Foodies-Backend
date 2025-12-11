@@ -70,13 +70,22 @@ export async function logoutService(user) {
 export async function currentService(userId) {
   const user = await User.findByPk(userId, {
     include: [
-      { model: User, as: "followers" },
-      { model: User, as: "following" },
-      { model: Recipe, as: "recipes" },
-      { model: Recipe, as: "favoriteRecipes" },
-      { model: Testimonial, as: "testimonials" },
+      { model: User, as: "followers", attributes: ["id"] },
+      { model: User, as: "following", attributes: ["id"] },
+      { model: Recipe, as: "recipes", attributes: ["id"] },
+      { model: Recipe, as: "favoriteRecipes", attributes: ["id"] },
     ],
   });
   if (!user) throw HttpError(404, "User not found");
-  return user;
+
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    avatar: user.avatar,
+    recipesCount: user.recipes?.length ?? 0,
+    favoritesCount: user.favoriteRecipes?.length ?? 0,
+    followersCount: user.followers?.length ?? 0,
+    followingCount: user.following?.length ?? 0,
+  };
 }
