@@ -24,6 +24,25 @@ export async function getUserById(id, { includeRelations = true } = {}) {
   return await User.findByPk(id, { include });
 }
 
+export async function getUserDetailsById(id) {
+  const user = await User.findByPk(id, {
+    include: [
+      { model: Recipe, as: "recipes", attributes: ["id"] },
+      { model: User, as: "followers", attributes: ["id"] },
+    ],
+  });
+  if (!user) return null;
+
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    avatar: user.avatar,
+    recipesCount: user.recipes?.length ?? 0,
+    followersCount: user.followers?.length ?? 0,
+  };
+}
+
 export async function listUsers({ page = 1, limit = 20, search } = {}) {
   const offset = (page - 1) * limit;
   const where = search

@@ -1,5 +1,12 @@
 import { Router } from "express";
-import { listUsers } from "../controllers/users.controller.js";
+import {
+  listUsers,
+  getUserDetails,
+  listFollowers,
+  listFollowing,
+  followUser,
+  unfollowUser,
+} from "../controllers/users.controller.js";
 import { listCategories } from "../controllers/categories.controller.js";
 import { listIngredients } from "../controllers/ingredients.controller.js";
 import {
@@ -29,11 +36,128 @@ const router = Router();
  *   get:
  *     tags: [Users]
  *     summary: List users
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number (default 1)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Page size (default 20)
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search by name or email (case-insensitive substring)
  *     responses:
  *       200:
  *         description: OK
  */
 router.get("/users", listUsers);
+
+/**
+ * @swagger
+ * /users/followers:
+ *   get:
+ *     tags: [Users]
+ *     summary: Get followers of the authenticated user
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: OK
+ *       401:
+ *         description: Not authorized
+ */
+router.get("/users/followers", authMiddleware, listFollowers);
+
+/**
+ * @swagger
+ * /users/following:
+ *   get:
+ *     tags: [Users]
+ *     summary: Get users the authenticated user is following
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: OK
+ *       401:
+ *         description: Not authorized
+ */
+router.get("/users/following", authMiddleware, listFollowing);
+
+/**
+ * @swagger
+ * /users/{id}:
+ *   get:
+ *     tags: [Users]
+ *     summary: Get detailed info about another user
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: User not found
+ */
+router.get("/users/:id", getUserDetails);
+
+/**
+ * @swagger
+ * /users/{id}/follow:
+ *   post:
+ *     tags: [Users]
+ *     summary: Follow a user
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID to follow
+ *     responses:
+ *       200:
+ *         description: Successfully followed
+ *       400:
+ *         description: Cannot follow yourself
+ *       401:
+ *         description: Not authorized
+ */
+router.post("/users/:id/follow", authMiddleware, followUser);
+
+/**
+ * @swagger
+ * /users/{id}/follow:
+ *   delete:
+ *     tags: [Users]
+ *     summary: Unfollow a user
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID to unfollow
+ *     responses:
+ *       200:
+ *         description: Successfully unfollowed
+ *       401:
+ *         description: Not authorized
+ */
+router.delete("/users/:id/follow", authMiddleware, unfollowUser);
 
 /**
  * @swagger
