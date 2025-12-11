@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import HttpError from "../utils/HttpError.js";
 import { User, Recipe, Testimonial } from "../models/index.js";
+import { nanoid } from "nanoid";
 
 export async function registerService({ name, email, password, avatar }) {
   if (!name || !email || !password) {
@@ -11,9 +12,7 @@ export async function registerService({ name, email, password, avatar }) {
   if (existing) throw HttpError(409, "Email in use");
 
   const passwordHash = await bcrypt.hash(password, 10);
-  const id = (
-    Math.random().toString(16).slice(2) + Date.now().toString(16)
-  ).slice(0, 24);
+  const id = nanoid();
 
   const user = await User.create({
     id,

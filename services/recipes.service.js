@@ -1,11 +1,6 @@
 import { Op, fn } from "sequelize";
 import { Recipe, Ingredient, User, Favorite } from "../models/index.js";
-
-function generateId() {
-  return (
-    Math.random().toString(16).slice(2) + Date.now().toString(16)
-  ).slice(0, 24);
-}
+import { nanoid } from "nanoid";
 
 const RECIPE_OWNER_ATTRIBUTES = ["id", "name", "avatar"];
 const DEFAULT_RECIPE_OWNER_INCLUDE = {
@@ -37,7 +32,7 @@ async function expandIngredients(recipeInstance) {
 export async function createRecipe(payload) {
   const data = { ...payload };
   if (!data.id) {
-    data.id = generateId();
+    data.id = nanoid();
   }
   return await Recipe.create(data);
 }
@@ -78,7 +73,7 @@ export async function listRecipes({
     }
   }
   const offset = (page - 1) * limit;
-  const include = includeRecipeOwners ? [DEFAULT_RECIPE_OWNER_INCLUDE] : []; 
+  const include = includeRecipeOwners ? [DEFAULT_RECIPE_OWNER_INCLUDE] : [];
   const { rows, count } = await Recipe.findAndCountAll({
     where,
     limit,
@@ -145,7 +140,9 @@ export async function listPopularRecipes({ page = 1, limit = 20 } = {}) {
       const instance = recipes.find((r) => r.id === id);
       if (!instance) return null;
       const recipe = instance.toJSON();
-      const ingItems = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
+      const ingItems = Array.isArray(recipe.ingredients)
+        ? recipe.ingredients
+        : [];
       recipe.ingredientsDetailed = ingItems
         .map(({ id, measure }) => ({ ...ingredientMap.get(id), measure }))
         .filter(Boolean);

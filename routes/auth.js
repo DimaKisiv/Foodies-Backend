@@ -18,8 +18,7 @@ const router = Router();
  * /auth/register:
  *   post:
  *     tags: [Auth]
- *     summary: Register user
- *     security: []
+ *     summary: Register a new user
  *     requestBody:
  *       required: true
  *       content:
@@ -34,13 +33,19 @@ const router = Router();
  *                 format: email
  *               password:
  *                 type: string
+ *                 minLength: 6
  *               avatar:
  *                 type: string
  *                 format: uri
- *             required: [name, email, password]
+ *             required:
+ *               - name
+ *               - email
+ *               - password
  *     responses:
- *       200:
- *         description: OK
+ *       201:
+ *         description: User registered
+ *       400:
+ *         description: Validation error
  */
 router.post("/register", validate(registerSchema), register);
 
@@ -50,7 +55,6 @@ router.post("/register", validate(registerSchema), register);
  *   post:
  *     tags: [Auth]
  *     summary: Login user
- *     security: []
  *     requestBody:
  *       required: true
  *       content:
@@ -63,10 +67,17 @@ router.post("/register", validate(registerSchema), register);
  *                 format: email
  *               password:
  *                 type: string
- *             required: [email, password]
+ *                 minLength: 6
+ *             required:
+ *               - email
+ *               - password
  *     responses:
  *       200:
- *         description: OK
+ *         description: Logged in
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Invalid credentials
  */
 router.post("/login", validate(loginSchema), login);
 
@@ -75,12 +86,14 @@ router.post("/login", validate(loginSchema), login);
  * /auth/logout:
  *   post:
  *     tags: [Auth]
- *     summary: Logout user
+ *     summary: Logout current user
  *     security:
  *       - bearerAuth: []
  *     responses:
- *       200:
- *         description: OK
+ *       204:
+ *         description: Logged out
+ *       401:
+ *         description: Not authorized
  */
 router.post("/logout", authMiddleware, logout);
 
@@ -106,7 +119,6 @@ router.get("/current", authMiddleware, current);
  *   patch:
  *     tags: [Auth]
  *     summary: Update user avatar
- *     description: Uploads a new avatar image for the authenticated user.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -119,15 +131,11 @@ router.get("/current", authMiddleware, current);
  *               avatar:
  *                 type: string
  *                 format: binary
- *                 description: Avatar image file
- *           encoding:
- *             avatar:
- *               contentType: image/png, image/jpeg, image/jpg
  *     responses:
  *       200:
- *         description: Avatar updated successfully
+ *         description: Avatar updated
  *       400:
- *         description: Invalid file or request
+ *         description: No file uploaded
  *       401:
  *         description: Not authorized
  */
