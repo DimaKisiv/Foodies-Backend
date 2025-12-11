@@ -149,6 +149,26 @@ export async function createRecipe(req, res, next) {
   }
 }
 
+export async function updateRecipe(req, res, next) {
+  try {
+    const user = req.user;
+    if (!user) throw HttpError(401, "Not authorized");
+
+    const { id } = req.params;
+    const recipe = await RecipesService.getRecipeById(id, {
+      includeOwner: false,
+      expand: false,
+    });
+    if (!recipe) throw HttpError(404, "Recipe not found");
+    if (recipe.ownerId !== user.id) throw HttpError(403, "Forbidden");
+
+    const updated = await RecipesService.updateRecipe(id, req.body);
+    res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function deleteRecipe(req, res, next) {
   try {
     const user = req.user;

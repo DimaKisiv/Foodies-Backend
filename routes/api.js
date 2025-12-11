@@ -15,6 +15,7 @@ import {
   getRecipeById,
   listPopularRecipes,
   createRecipe,
+  updateRecipe,
   deleteRecipe,
   addFavoriteRecipe,
   removeFavoriteRecipe,
@@ -26,7 +27,7 @@ import { listAreas } from "../controllers/areas.controller.js";
 import authRouter from "./auth.js";
 import authMiddleware from "../middlewares/auth.js";
 import validate from "../middlewares/validate.js";
-import { createRecipeSchema } from "../schemas/recipes.schema.js";
+import { createRecipeSchema, updateRecipeSchema } from "../schemas/recipes.schema.js";
 
 const router = Router();
 
@@ -387,6 +388,64 @@ router.get("/recipes/favorites", authMiddleware, listFavoriteRecipes);
  *         description: Recipe not found
  */
 router.get("/recipes/:id", getRecipeById);
+
+/**
+ * @swagger
+ * /recipes/{id}:
+ *   patch:
+ *     tags: [Recipes]
+ *     summary: Update a recipe owned by the authenticated user
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Recipe ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               instructions:
+ *                 type: string
+ *               thumb:
+ *                 type: string
+ *                 format: uri
+ *               time:
+ *                 type: integer
+ *               category:
+ *                 type: string
+ *               area:
+ *                 type: string
+ *               ingredients:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     measure:
+ *                       type: string
+ *     responses:
+ *       200:
+ *         description: Recipe updated
+ *       401:
+ *         description: Not authorized
+ *       403:
+ *         description: Forbidden (not the owner)
+ *       404:
+ *         description: Recipe not found
+ */
+router.patch("/recipes/:id", authMiddleware, validate(updateRecipeSchema), updateRecipe);
 
 /**
  * @swagger
