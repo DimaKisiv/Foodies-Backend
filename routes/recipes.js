@@ -60,6 +60,7 @@ const router = Router();
  *     responses:
  *       200:
  *         description: OK
+ *     security: []
  */
 router.get("/", listRecipes);
 
@@ -268,6 +269,7 @@ router.delete("/:id/favorite", authMiddleware, removeFavoriteRecipe);
  *         description: OK
  *       404:
  *         description: Recipe not found
+ *     security: []
  */
 router.get("/:id", getRecipeById);
 

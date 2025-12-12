@@ -11,6 +11,7 @@ const router = Router();
  *     responses:
  *       200:
  *         description: OK
+ *     security: []
  */
 router.get("/", listAreas);
 export default router;

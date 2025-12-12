@@ -6,8 +6,11 @@ import {
   listFollowing,
   followUser,
   unfollowUser,
+  current,
+  updateAvatar,
 } from "../controllers/users.controller.js";
 import authMiddleware from "../middlewares/auth.js";
+import upload from "../middlewares/upload.js";
 
 const router = Router();
 /**
@@ -35,6 +38,7 @@ const router = Router();
  *     responses:
  *       200:
  *         description: OK
+ *     security: []
  */
 router.get("/", listUsers);
 /**
@@ -52,6 +56,51 @@ router.get("/", listUsers);
  *         description: Not authorized
  */
 router.get("/followers", authMiddleware, listFollowers);
+
+/**
+ * @swagger
+ * /auth/current:
+ *   get:
+ *     tags: [Users]
+ *     summary: Get current authenticated user
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: OK
+ *       401:
+ *         description: Not authorized
+ */
+router.get("/current", authMiddleware, current);
+
+/**
+ * @swagger
+ * /auth/avatars:
+ *   patch:
+ *     tags: [Users]
+ *     summary: Update user avatar
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               avatar:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Avatar updated
+ *       400:
+ *         description: No file uploaded
+ *       401:
+ *         description: Not authorized
+ */
+router.patch("/avatars", authMiddleware, upload.single("avatar"), updateAvatar);
+
 /**
  * @swagger
  * /users/following:
@@ -85,6 +134,7 @@ router.get("/following", authMiddleware, listFollowing);
  *         description: OK
  *       404:
  *         description: User not found
+ *     security: []
  */
 router.get("/:id", getUserDetails);
 /**

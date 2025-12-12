@@ -1,15 +1,8 @@
 import { Router } from "express";
-import {
-  register,
-  login,
-  logout,
-  current,
-  updateAvatar,
-} from "../controllers/auth.controller.js";
+import { register, login, logout } from "../controllers/auth.controller.js";
 import authMiddleware from "../middlewares/auth.js";
 import validate from "../middlewares/validate.js";
 import { registerSchema, loginSchema } from "../schemas/auth.schema.js";
-import upload from "../middlewares/upload.js";
 
 const router = Router();
 
@@ -46,6 +39,7 @@ const router = Router();
  *         description: User registered
  *       400:
  *         description: Validation error
+ *     security: []
  */
 router.post("/register", validate(registerSchema), register);
 
@@ -78,6 +72,7 @@ router.post("/register", validate(registerSchema), register);
  *         description: Validation error
  *       401:
  *         description: Invalid credentials
+ *     security: []
  */
 router.post("/login", validate(loginSchema), login);
 
@@ -96,49 +91,5 @@ router.post("/login", validate(loginSchema), login);
  *         description: Not authorized
  */
 router.post("/logout", authMiddleware, logout);
-
-/**
- * @swagger
- * /auth/current:
- *   get:
- *     tags: [Auth]
- *     summary: Get current authenticated user
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: OK
- *       401:
- *         description: Not authorized
- */
-router.get("/current", authMiddleware, current);
-
-/**
- * @swagger
- * /auth/avatars:
- *   patch:
- *     tags: [Auth]
- *     summary: Update user avatar
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               avatar:
- *                 type: string
- *                 format: binary
- *     responses:
- *       200:
- *         description: Avatar updated
- *       400:
- *         description: No file uploaded
- *       401:
- *         description: Not authorized
- */
-router.patch("/avatars", authMiddleware, upload.single("avatar"), updateAvatar);
 
 export default router;

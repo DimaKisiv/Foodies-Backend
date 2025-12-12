@@ -8,7 +8,7 @@ const options = {
       version: "1.0.0",
       description: "Auto-generated Swagger via swagger-jsdoc",
     },
-    servers: [{ url: "/api" }],
+    servers: [{ url: "http://localhost:3000/api" }],
     components: {
       securitySchemes: {
         bearerAuth: {
