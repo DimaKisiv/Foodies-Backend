@@ -39,6 +39,16 @@ const router = Router();
  *         description: User registered
  *       400:
  *         description: Validation error
+ *       409:
+ *         description: Email already registered
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Email already registered
  *     security: []
  */
 router.post("/register", validate(registerSchema), register);

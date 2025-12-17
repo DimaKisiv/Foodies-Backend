@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { UniqueConstraintError } from "sequelize";
 import HttpError from "../utils/HttpError.js";
 import { User, Recipe, Testimonial } from "../models/index.js";
 import { nanoid } from "nanoid";
@@ -9,18 +10,26 @@ export async function registerService({ name, email, password, avatar }) {
     throw HttpError(400, "name, email, password are required");
   }
   const existing = await User.findOne({ where: { email } });
-  if (existing) throw HttpError(409, "Email in use");
+  if (existing) throw HttpError(409, "Email already registered");
 
   const passwordHash = await bcrypt.hash(password, 10);
   const id = nanoid();
 
-  const user = await User.create({
-    id,
-    name,
-    email,
-    avatar: avatar ?? null,
-    passwordHash,
-  });
+  let user;
+  try {
+    user = await User.create({
+      id,
+      name,
+      email,
+      avatar: avatar ?? null,
+      passwordHash,
+    });
+  } catch (err) {
+    if (err instanceof UniqueConstraintError) {
+      throw HttpError(409, "Email already registered");
+    }
+    throw err;
+  }
   const secret = process.env.JWT_SECRET;
   if (!secret) throw HttpError(500, "Server misconfiguration");
   const token = jwt.sign({ id: user.id }, secret, { expiresIn: "7d" });
