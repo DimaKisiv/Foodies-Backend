@@ -13,6 +13,9 @@ import {
 } from "../controllers/recipes.controller.js";
 import authMiddleware from "../middlewares/auth.js";
 import validate from "../middlewares/validate.js";
+import upload from "../middlewares/upload.js";
+import parseRecipeBody from "../middlewares/parseRecipeBody.js";
+import requireThumbFile from "../middlewares/requireThumbFile.js";
 import {
   createRecipeSchema,
   updateRecipeSchema,
@@ -161,7 +164,7 @@ router.get("/favorites", authMiddleware, listFavoriteRecipes);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -173,7 +176,7 @@ router.get("/favorites", authMiddleware, listFavoriteRecipes);
  *                 type: string
  *               thumb:
  *                 type: string
- *                 format: uri
+ *                 format: binary
  *               time:
  *                 type: integer
  *               category:
@@ -181,16 +184,16 @@ router.get("/favorites", authMiddleware, listFavoriteRecipes);
  *               area:
  *                 type: string
  *               ingredients:
- *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                     measure:
- *                       type: string
+ *                 description: JSON array string of ingredient objects
+ *                 type: string
  *             required:
  *               - title
+ *               - description
+ *               - instructions
+ *               - category
+ *               - area
+ *               - ingredients
+ *               - thumb
  *     responses:
  *       201:
  *         description: Created
@@ -199,7 +202,15 @@ router.get("/favorites", authMiddleware, listFavoriteRecipes);
  *       401:
  *         description: Not authorized
  */
-router.post("/", authMiddleware, validate(createRecipeSchema), createRecipe);
+router.post(
+  "/",
+  authMiddleware,
+  upload.single("thumb"),
+  requireThumbFile,
+  parseRecipeBody,
+  validate(createRecipeSchema),
+  createRecipe
+);
 
 /**
  * @swagger
@@ -291,7 +302,7 @@ router.get("/:id", getRecipeById);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -303,7 +314,7 @@ router.get("/:id", getRecipeById);
  *                 type: string
  *               thumb:
  *                 type: string
- *                 format: uri
+ *                 format: binary
  *               time:
  *                 type: integer
  *               category:
@@ -311,14 +322,8 @@ router.get("/:id", getRecipeById);
  *               area:
  *                 type: string
  *               ingredients:
- *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                     measure:
- *                       type: string
+ *                 description: JSON array string of ingredient objects
+ *                 type: string
  *     responses:
  *       200:
  *         description: Recipe updated
@@ -332,6 +337,8 @@ router.get("/:id", getRecipeById);
 router.patch(
   "/:id",
   authMiddleware,
+  upload.single("thumb"),
+  parseRecipeBody,
   validate(updateRecipeSchema),
   updateRecipe
 );

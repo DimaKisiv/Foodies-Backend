@@ -85,6 +85,53 @@ export async function listRecipes({
   return { items: expanded, total: count, page, limit };
 }
 
+export async function listFavoriteRecipesForUser({
+  userId,
+  page = 1,
+  limit = 20,
+  category,
+  area,
+  search,
+  ingredientIds,
+} = {}) {
+  const where = {};
+  if (category) where.category = category;
+  if (area) where.area = area;
+  if (search) where.title = { [Op.iLike]: `%${search}%` };
+  if (Array.isArray(ingredientIds) && ingredientIds.length > 0) {
+    const orClauses = ingredientIds.map((id) => ({
+      ingredients: { [Op.contains]: [{ id }] },
+    }));
+    if (orClauses.length === 1) {
+      Object.assign(where, orClauses[0]);
+    } else {
+      where[Op.or] = [...(where[Op.or] || []), ...orClauses];
+    }
+  }
+
+  const offset = (page - 1) * limit;
+  const include = [
+    DEFAULT_RECIPE_OWNER_INCLUDE,
+    {
+      model: User,
+      as: "favoritedBy",
+      through: { attributes: [] },
+      where: { id: userId },
+      required: true,
+    },
+  ];
+
+  const { rows, count } = await Recipe.findAndCountAll({
+    where,
+    limit,
+    offset,
+    include,
+    order: [["created_at", "DESC"]],
+  });
+  const expanded = await Promise.all(rows.map((r) => expandIngredients(r)));
+  return { items: expanded, total: count, page, limit };
+}
+
 export async function updateRecipe(id, changes) {
   const rec = await Recipe.findByPk(id);
   if (!rec) return null;

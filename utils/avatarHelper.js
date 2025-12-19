@@ -11,14 +11,13 @@ const ensureDir = (dirPath) => {
 
 export const saveUploadedAvatar = async (file, userId) => {
   ensureDir(AVATARS_DIR);
-  const ext =
-    path.extname(file?.originalname || "").toLowerCase() || ".jpg" || ".jpg";
-  const uniqueName = `${userId}_${Date.now()}${ext}`;
-  const destPath = path.join(AVATARS_DIR, uniqueName);
+  const ext = path.extname(file?.originalname || "").toLowerCase() || ".jpg";
+  const fileName = `${userId}${ext}`;
+  const destPath = path.join(AVATARS_DIR, fileName);
   await fs.promises.rename(file.path, destPath);
   return {
-    avatarURL: `/avatars/${uniqueName}`,
+    avatarURL: `/avatars/${fileName}`,
     filePath: destPath,
-    filename: uniqueName,
+    filename: fileName,
   };
 };

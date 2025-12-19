@@ -1,5 +1,8 @@
 import * as UsersService from "../services/users.service.js";
+import * as AuthService from "../services/auth.service.js";
 import HttpError from "../utils/HttpError.js";
+import { saveUploadedAvatar } from "../utils/avatarHelper.js";
+import { getBaseUrl } from "../utils/url.js";
 
 export async function listUsers(req, res, next) {
   try {
@@ -20,7 +23,12 @@ export async function current(req, res, next) {
     const authUser = req.user;
     if (!authUser) throw HttpError(401, "Not authorized");
     const user = await AuthService.currentService(authUser.id);
-    res.json(user);
+    const base = getBaseUrl(req);
+    const avatar =
+      typeof user.avatar === "string" && user.avatar.startsWith("/")
+        ? `${base}${user.avatar}`
+        : user.avatar;
+    res.json({ ...user, avatar });
   } catch (err) {
     next(err);
   }
@@ -38,10 +46,11 @@ export const updateAvatar = async (req, res, next) => {
     }
 
     const { avatarURL: publicUrl } = await saveUploadedAvatar(file, user.id);
-    user.avatarURL = publicUrl;
+    user.avatar = publicUrl;
     await user.save();
 
-    res.status(200).json({ avatarURL: publicUrl });
+    const absolute = `${getBaseUrl(req)}${publicUrl}`;
+    res.status(200).json({ avatarURL: absolute });
   } catch (err) {
     next(err);
   }
@@ -52,7 +61,12 @@ export async function getUserDetails(req, res, next) {
     const { id } = req.params;
     const user = await UsersService.getUserDetailsById(id);
     if (!user) throw HttpError(404, "User not found");
-    res.json(user);
+    const base = getBaseUrl(req);
+    const avatar =
+      typeof user.avatar === "string" && user.avatar.startsWith("/")
+        ? `${base}${user.avatar}`
+        : user.avatar;
+    res.json({ ...user, avatar });
   } catch (err) {
     next(err);
   }
@@ -63,7 +77,48 @@ export async function listFollowers(req, res, next) {
     const user = req.user;
     if (!user) throw HttpError(401, "Not authorized");
     const followers = await UsersService.getFollowers(user.id);
-    res.json({ items: followers, total: followers.length });
+    const base = getBaseUrl(req);
+    const absolutize = (p) =>
+      typeof p === "string" && p.startsWith("/") ? `${base}${p}` : p;
+    const items = followers.map((f) => {
+      const obj = typeof f.toJSON === "function" ? f.toJSON() : { ...f };
+      const avatar = absolutize(obj.avatar);
+      const recipes = Array.isArray(obj.recipes)
+        ? obj.recipes.map((r) => ({ id: r.id, thumb: absolutize(r.thumb) }))
+        : [];
+      return { id: obj.id, name: obj.name, avatar, recipes };
+    });
+    res.json({ items, total: items.length });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function listFollowersByUserId(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { page = 1, limit = 12 } = req.query;
+    const { items, total } = await UsersService.listFollowersByUserId({
+      userId: id,
+      page: Number(page) || 1,
+      limit: Number(limit) || 12,
+    });
+    const base = getBaseUrl(req);
+    const absolutize = (p) =>
+      typeof p === "string" && p.startsWith("/") ? `${base}${p}` : p;
+    const mapped = items.map((f) => {
+      const avatar = absolutize(f.avatar);
+      const recipes = Array.isArray(f.recipes)
+        ? f.recipes.map((r) => ({ id: r.id, thumb: absolutize(r.thumb) }))
+        : [];
+      return { id: f.id, name: f.name, avatar, recipes };
+    });
+    res.json({
+      items: mapped,
+      total,
+      page: Number(page) || 1,
+      limit: Number(limit) || 12,
+    });
   } catch (err) {
     next(err);
   }
@@ -74,7 +129,18 @@ export async function listFollowing(req, res, next) {
     const user = req.user;
     if (!user) throw HttpError(401, "Not authorized");
     const following = await UsersService.getFollowing(user.id);
-    res.json({ items: following, total: following.length });
+    const base = getBaseUrl(req);
+    const absolutize = (p) =>
+      typeof p === "string" && p.startsWith("/") ? `${base}${p}` : p;
+    const items = following.map((f) => {
+      const obj = typeof f.toJSON === "function" ? f.toJSON() : { ...f };
+      const avatar = absolutize(obj.avatar);
+      const recipes = Array.isArray(obj.recipes)
+        ? obj.recipes.map((r) => ({ id: r.id, thumb: absolutize(r.thumb) }))
+        : [];
+      return { id: obj.id, name: obj.name, avatar, recipes };
+    });
+    res.json({ items, total: items.length });
   } catch (err) {
     next(err);
   }

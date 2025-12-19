@@ -3,6 +3,7 @@ import {
   listUsers,
   getUserDetails,
   listFollowers,
+  listFollowersByUserId,
   listFollowing,
   followUser,
   unfollowUser,
@@ -56,6 +57,38 @@ router.get("/", listUsers);
  *         description: Not authorized
  */
 router.get("/followers", authMiddleware, listFollowers);
+
+/**
+ * @swagger
+ * /users/{id}/followers:
+ *   get:
+ *     tags: [Users]
+ *     summary: Get followers of a user by id
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Target user ID
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number (default 1)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Page size (default 12)
+ *     responses:
+ *       200:
+ *         description: OK
+ *       404:
+ *         description: User not found
+ *     security: []
+ */
+router.get("/:id/followers", listFollowersByUserId);
 
 /**
  * @swagger

@@ -100,14 +100,32 @@ export async function unfollowUser(userId, targetUserId) {
 
 export async function getFollowers(userId) {
   const user = await User.findByPk(userId, {
-    include: [{ model: User, as: "followers", through: { attributes: [] } }],
+    include: [
+      {
+        model: User,
+        as: "followers",
+        through: { attributes: [] },
+        include: [
+          { model: Recipe, as: "recipes", attributes: ["id", "thumb"] },
+        ],
+      },
+    ],
   });
   return user?.followers ?? [];
 }
 
 export async function getFollowing(userId) {
   const user = await User.findByPk(userId, {
-    include: [{ model: User, as: "following", through: { attributes: [] } }],
+    include: [
+      {
+        model: User,
+        as: "following",
+        through: { attributes: [] },
+        include: [
+          { model: Recipe, as: "recipes", attributes: ["id", "thumb"] },
+        ],
+      },
+    ],
   });
   return user?.following ?? [];
 }
@@ -119,4 +137,33 @@ export async function getFavorites(userId) {
     ],
   });
   return user?.favoriteRecipes ?? [];
+}
+
+export async function listFollowersByUserId({ userId, page = 1, limit = 20 }) {
+  const offset = (page - 1) * limit;
+  const total = await Follower.count({ where: { userId } });
+  if (total === 0) return { items: [], total, page, limit };
+
+  const rows = await Follower.findAll({
+    where: { userId },
+    attributes: ["followerId"],
+    order: [["created_at", "DESC"]],
+    limit,
+    offset,
+    raw: true,
+  });
+  const followerIds = rows.map((r) => r.followerId);
+  if (followerIds.length === 0) return { items: [], total, page, limit };
+
+  const followers = await User.findAll({
+    where: { id: followerIds },
+    include: [{ model: Recipe, as: "recipes", attributes: ["id", "thumb"] }],
+  });
+  const byId = new Map(followers.map((u) => [u.id, u]));
+  const ordered = followerIds
+    .map((id) => byId.get(id))
+    .filter(Boolean)
+    .map((u) => (typeof u.toJSON === "function" ? u.toJSON() : u));
+
+  return { items: ordered, total, page, limit };
 }
