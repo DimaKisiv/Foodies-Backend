@@ -8,7 +8,7 @@ const options = {
       version: "1.0.0",
       description: "Auto-generated Swagger via swagger-jsdoc",
     },
-    servers: [{ url: "http://localhost:3000/api" }],
+    servers: [{ url: "https://foodies-backend-m3dk.onrender.com/api/" }],
     components: {
       securitySchemes: {
         bearerAuth: {

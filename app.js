@@ -12,7 +12,10 @@ import { swaggerSpec } from "./utils/swagger.js";
 const app = express();
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "https://foodies-frontend-five.vercel.app",
+    ],
     credentials: true,
   })
 );
